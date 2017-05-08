@@ -21,8 +21,6 @@
 #import "CBLReadOnlyDocument.h"
 #import "CBLReadOnlyDictionary.h"
 #import "CBLReadOnlyFragment.h"
-#import "CBLReadOnlySubdocument.h"
-#import "CBLSubdocument.h"
 #import "Fleece.h"
 
 
@@ -128,16 +126,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithFleeceData: (nullable CBLFLDict*)data;
 
 - (BOOL) isFleeceEncodableValue: (id)value;
-
-@end
-
-//////////////////
-
-@interface CBLSubdocument ()
-
-// @property (weak, nonatomic, nullable) id swiftSubdocument;
-
-@property (readonly, nonatomic) CBLDictionary* dictionary;
 
 @end
 

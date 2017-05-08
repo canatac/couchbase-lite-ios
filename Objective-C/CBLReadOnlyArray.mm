@@ -82,8 +82,8 @@
 }
 
 
-- (nullable CBLReadOnlySubdocument*) subdocumentAtIndex: (NSUInteger)index {
-    return $castIf(CBLReadOnlySubdocument, [self objectAtIndex: index]);
+- (nullable CBLReadOnlyDictionary*) dictionaryAtIndex: (NSUInteger)index {
+    return $castIf(CBLReadOnlyDictionary, [self objectAtIndex: index]);
 }
 
 

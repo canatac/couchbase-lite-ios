@@ -26,9 +26,9 @@
         [value isKindOfClass: [NSNumber class]] ||
         [value isKindOfClass: [NSDate class]] ||
         [value isKindOfClass: [CBLBlob class]] ||
-        [value isKindOfClass: [CBLSubdocument class]] ||
+        [value isKindOfClass: [CBLDictionary class]] ||
         [value isKindOfClass: [CBLArray class]] ||
-        [value isKindOfClass: [CBLReadOnlySubdocument class]] ||
+        [value isKindOfClass: [CBLReadOnlyDictionary class]] ||
         [value isKindOfClass: [CBLReadOnlyArray class]] ||
         [value isKindOfClass: [NSDictionary class]] ||
         [value isKindOfClass: [NSArray class]];
@@ -62,7 +62,7 @@
             FLSlice type = FLValue_AsString(FLDict_GetSharedKey(dict, typeKey, &sk));
             if(!type.buf) {
                 id data = [[CBLFLDict alloc] initWithDict: dict c4doc: c4doc database: database];
-                return [[CBLReadOnlySubdocument alloc] initWithFleeceData: data];
+                return [[CBLReadOnlyDictionary alloc] initWithFleeceData: data];
             } else {
                 id result = FLValue_GetNSObject(value, &sk);
                 return [self dictionaryToCBLObject: result database: database];

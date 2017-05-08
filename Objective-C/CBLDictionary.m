@@ -13,7 +13,6 @@
 #import "CBLDocument+Internal.h"
 #import "CBLFragment.h"
 #import "CBLJSON.h"
-#import "CBLSubdocument.h"
 
 
 @implementation CBLDictionary {
@@ -32,6 +31,26 @@ static id kRemovedValue;
         kRemovedValue = [[NSObject alloc] init];
     }
 }
+
+
++ (instancetype) dictionary {
+    return [[self alloc] init];
+}
+
+
+- (instancetype) init {
+    return [self initWithFleeceData: nil];
+}
+
+
+- (instancetype) initWithDictionary: (NSDictionary<NSString*,id>*)dictionary {
+    self = [self initWithFleeceData: nil];
+    if (self) {
+        [self setDictionary: dictionary];
+    }
+    return self;
+}
+
 
 - /* internal */ (instancetype) initWithFleeceData: (CBLFLDict *)data {
     self = [super initWithFleeceData: data];
@@ -64,8 +83,8 @@ static id kRemovedValue;
     id value = _dict[key];
     if (!value) {
         value = [super objectForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
-            value = [self convertReadOnlySubdocument: value];
+        if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
+            value = [self convertReadOnlyDictionary: value];
             [self setValue: value forKey: key isChange: NO];
         } else if ([value isKindOfClass: [CBLReadOnlyArray class]]) {
             value = [self convertReadOnlyArray: value];
@@ -149,17 +168,17 @@ static id kRemovedValue;
 }
 
 
-- (nullable CBLSubdocument*) subdocumentForKey: (NSString*)key {
+- (nullable CBLDictionary*) dictionaryForKey: (NSString*)key {
     id value = _dict[key];
     if (!value) {
-        value = [super subdocumentForKey: key];
-        if ([value isKindOfClass: [CBLReadOnlySubdocument class]]) {
-            value = [self convertReadOnlySubdocument: value];
+        value = [super dictionaryForKey: key];
+        if ([value isKindOfClass: [CBLReadOnlyDictionary class]]) {
+            value = [self convertReadOnlyDictionary: value];
             [self setValue: value forKey: key isChange: NO];
         }
         return value;
     } else
-        return $castIf(CBLSubdocument, value);
+        return $castIf(CBLDictionary, value);
 }
 
 
@@ -313,27 +332,27 @@ static id kRemovedValue;
 - (id) convertValue: (id)value {
     if (!value)
         return kRemovedValue; // Represent removed key
-    else if ([value isKindOfClass: [CBLSubdocument class]])
-        return [self convertSubdocument: value];
+    else if ([value isKindOfClass: [CBLDictionary class]])
+        return [self convertDictionary: value];
     else if ([value isKindOfClass: [CBLArray class]])
         return [self convertArrayObject: value];
-    else if ([value isKindOfClass: [CBLReadOnlySubdocument class]])
-        return [self convertReadOnlySubdocument: value];
+    else if ([value isKindOfClass: [CBLReadOnlyDictionary class]])
+        return [self convertReadOnlyDictionary: value];
     else if ([value isKindOfClass: [CBLReadOnlyArray class]])
         return [self convertReadOnlyArray: value];
     else if ([value isKindOfClass: [NSDictionary class]])
-        return [self convertDictionary: value];
+        return [self convertNSDictionary: value];
     else if ([value isKindOfClass: [NSArray class]])
-        return [self convertArray: value];
+        return [self convertNSArray: value];
     else if ([value isKindOfClass: [NSDate class]])
         return [CBLJSON JSONObjectWithDate: value];
     return value;
 }
 
 
-- (id) convertSubdocument: (CBLSubdocument*)subdocument {
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertDictionary: (CBLDictionary*)dict {
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
@@ -343,10 +362,10 @@ static id kRemovedValue;
 }
 
 
-- (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertReadOnlyDictionary: (CBLReadOnlyDictionary*)readOnlyDict {
+    CBLDictionary* dict = [[CBLDictionary alloc] initWithFleeceData: readOnlyDict.data];
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
@@ -357,15 +376,15 @@ static id kRemovedValue;
 }
 
 
-- (id) convertDictionary: (NSDictionary*)dictionary {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
-    [subdocument setDictionary: dictionary];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertNSDictionary: (NSDictionary*)dictionary {
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setDictionary: dictionary];
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
-- (id) convertArray: (NSArray*)array {
+- (id) convertNSArray: (NSArray*)array {
     CBLArray* arrayObject = [[CBLArray alloc] init];
     [arrayObject setArray: array];
     [arrayObject addChangeListener: self];
@@ -416,9 +435,9 @@ static id kRemovedValue;
 
 
 - (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdocument = (CBLSubdocument*)object;
-        [subdocument.dictionary removeChangeListener: self];
+    if ([object isKindOfClass: [CBLDictionary class]]) {
+        CBLDictionary* dict = (CBLDictionary*)object;
+        [dict removeChangeListener: self];
     } else if ([object isKindOfClass: [CBLArray class]]) {
         CBLArray* array = (CBLArray*)object;
         [array removeChangeListener: self];

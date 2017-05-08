@@ -11,7 +11,6 @@
 #import "CBLData.h"
 #import "CBLDocument+Internal.h"
 #import "CBLJSON.h"
-#import "CBLSubdocument.h"
 
 
 @implementation CBLArray {
@@ -32,7 +31,7 @@
 
 
 - (instancetype) initWithArray: (NSArray*)array {
-    self = [self init];
+    self = [self initWithFleeceData: nil];
     if (self) {
         [self setArray: array];
     }
@@ -105,9 +104,9 @@
 }
 
 
-- (nullable CBLSubdocument*) subdocumentAtIndex: (NSUInteger)index {
+- (nullable CBLDictionary*) dictionaryAtIndex: (NSUInteger)index {
     id value = _array[index];
-    return $castIf(CBLSubdocument, value);
+    return $castIf(CBLDictionary, value);
 }
 
 
@@ -219,9 +218,9 @@
 
 
 - (void) detachChangeListenerForObject: (id)object {
-    if ([object isKindOfClass: [CBLSubdocument class]]) {
-        CBLSubdocument* subdocument = (CBLSubdocument*)object;
-        [subdocument.dictionary removeChangeListener: self];
+    if ([object isKindOfClass: [CBLDictionary class]]) {
+        CBLDictionary* dict = (CBLDictionary*)object;
+        [dict removeChangeListener: self];
     } else if ([object isKindOfClass: [CBLArray class]]) {
         CBLArray* array = (CBLArray*)object;
         [array removeChangeListener: self];
@@ -265,27 +264,27 @@
 - (id) convertValue: (id)value {
     if (!value)
         return [NSNull null];
-    else if ([value isKindOfClass: [CBLSubdocument class]])
-        return [self convertSubdocument: value];
+    else if ([value isKindOfClass: [CBLDictionary class]])
+        return [self convertDictionary: value];
     else if ([value isKindOfClass: [CBLArray class]])
         return [self convertArrayObject: value];
-    else if ([value isKindOfClass: [CBLReadOnlySubdocument class]])
-        return [self convertReadOnlySubdocument: value];
+    else if ([value isKindOfClass: [CBLReadOnlyDictionary class]])
+        return [self convertReadOnlyDictionary: value];
     else if ([value isKindOfClass: [CBLReadOnlyArray class]])
         return [self convertReadOnlyArray: value];
     else if ([value isKindOfClass: [NSDictionary class]])
-        return [self convertDictionary: value];
+        return [self convertNSDictionary: value];
     else if ([value isKindOfClass: [NSArray class]])
-        return [self convertArray: value];
+        return [self convertNSArray: value];
     else if ([value isKindOfClass: [NSDate class]])
         return [CBLJSON JSONObjectWithDate: value];
     return value;
 }
 
 
-- (id) convertSubdocument: (CBLSubdocument*)subdocument {
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertDictionary: (CBLDictionary*)dict {
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
@@ -295,10 +294,10 @@
 }
 
 
-- (id) convertReadOnlySubdocument: (CBLReadOnlySubdocument*)readOnlySubdoc {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] initWithFleeceData: readOnlySubdoc.data];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertReadOnlyDictionary: (CBLReadOnlyDictionary*)readOnlyDict {
+    CBLDictionary* dict = [[CBLDictionary alloc] initWithFleeceData: readOnlyDict.data];
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
@@ -309,15 +308,15 @@
 }
 
 
-- (id) convertDictionary: (NSDictionary*)dictionary {
-    CBLSubdocument* subdocument = [[CBLSubdocument alloc] init];
-    [subdocument setDictionary: dictionary];
-    [subdocument.dictionary addChangeListener: self];
-    return subdocument;
+- (id) convertNSDictionary: (NSDictionary*)dictionary {
+    CBLDictionary* dict = [[CBLDictionary alloc] init];
+    [dict setDictionary: dictionary];
+    [dict addChangeListener: self];
+    return dict;
 }
 
 
-- (id) convertArray: (NSArray*)array {
+- (id) convertNSArray: (NSArray*)array {
     CBLArray* arrayObject = [[CBLArray alloc] init];
     [arrayObject setArray: array];
     [arrayObject addChangeListener: self];
