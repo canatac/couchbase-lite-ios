@@ -27,18 +27,6 @@
 @synthesize changed=_changed;
 
 
-// static id kRemovedValue;
-+ (void) initialize {
-    if (self == [CBLDictionary class]) {
-        // kRemovedValue = [[NSObject alloc] init];
-    }
-}
-
-- /* internal */ (instancetype) initWithFleeceData: (CBLFLDict *)data {
-    return [super initWithFleeceData: data];
-}
-
-
 #pragma mark - GETTER
 
 
