@@ -121,7 +121,7 @@
 }
 
 
-#pragma mark - SUBSCRIPTION
+#pragma mark - SUBSCRIPTING
 
 
 - (CBLReadOnlyFragment*) objectForKeyedSubscript: (NSString*)key {
@@ -147,31 +147,11 @@
 #pragma mark - FLEECE ENCODING
 
 
-- (BOOL) isFleeceEncodableValue: (id)value {
-    return YES;
-}
-
-
 - (BOOL) fleeceEncode: (FLEncoder)encoder
              database: (CBLDatabase*)database
                 error: (NSError**)outError
 {
-    NSArray* keys = [self allKeys];
-    FLEncoder_BeginDict(encoder, keys.count);
-    for (NSString* key in keys) {
-        id value = [self objectForKey: key];
-        if ([self isFleeceEncodableValue: value]) {
-            CBLStringBytes bKey(key);
-            FLEncoder_WriteKey(encoder, bKey);
-            if ([value conformsToProtocol: @protocol(CBLFleeceEncodable)]){
-                if (![value fleeceEncode: encoder database: database error: outError])
-                    return NO;
-            } else
-                FLEncoder_WriteNSObject(encoder, value);
-        }
-    }
-    FLEncoder_EndDict(encoder);
-    return YES;
+    return FLEncoder_WriteValue(encoder, (FLValue)_dict);
 }
 
 
