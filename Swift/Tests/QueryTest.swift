@@ -10,7 +10,7 @@ import XCTest
 import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
-    
+    /*
     func verifyQuery(_ query: Query, block: (UInt64, QueryRow) throws ->Void) throws -> UInt64 {
         var n: UInt64 = 0
         for row in try query.run() {
@@ -315,4 +315,5 @@ class QueryTest: CBLTestCase {
         })
         XCTAssertEqual(numRow, 1)
     }
+    */
 }

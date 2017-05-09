@@ -12,6 +12,9 @@
 #import "CBLJSON.h"
 
 
+#define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
+#define kDocumentTestBlob @"i'm blob"
+
 @interface DocumentTest : CBLTestCase
 
 @end
@@ -28,7 +31,7 @@
     [doc setObject: @(1) forKey: @"one"];
     [doc setObject: @(-1) forKey: @"minus_one"];
     [doc setObject: @(1.1) forKey: @"one_dot_one"];
-    [doc setObject: [NSDate date] forKey: @"date"];
+    [doc setObject: [CBLJSON dateWithJSONObject: kDocumentTestDate] forKey: @"date"];
     [doc setObject: [NSNull null] forKey: @"null"];
     
     // Dictionary:
@@ -45,7 +48,7 @@
     [doc setObject: array forKey: @"array"];
     
     // Blob:
-    NSData* content = [@"12345" dataUsingEncoding: NSUTF8StringEncoding];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     [doc setObject: blob forKey: @"blob"];
 }
@@ -72,7 +75,7 @@
     AssertFalse(doc1a.isDeleted);
     AssertEqualObjects([doc1a toDictionary], @{});
     
-    CBLDocument* doc1b = [self saveDocument: doc1a];;
+    CBLDocument* doc1b = [self saveDocument: doc1a];
     Assert(doc1b != doc1a);
     AssertNotNil(doc1b);
     AssertEqualObjects(doc1b.documentID, doc1a.documentID);
@@ -82,9 +85,6 @@
 - (void) testCreateDocWithEmptyStringID {
     CBLDocument* doc1a = [[CBLDocument alloc] initWithID: @""];
     AssertNotNil(doc1a);
-    AssertEqualObjects(doc1a.documentID, @"");
-    AssertFalse(doc1a.isDeleted);
-    AssertEqualObjects([doc1a toDictionary], @{});
     
     NSError *error;
     AssertFalse([_db saveDocument: doc1a error: &error]);
@@ -215,16 +215,13 @@
     AssertEqual([doc floatForKey: @"key"], 0.0f);
     AssertEqual([doc doubleForKey: @"key"], 0.0);
     AssertEqual([doc booleanForKey: @"key"], NO);
-    
     AssertNil([doc blobForKey: @"key"]);
     AssertNil([doc dateForKey: @"key"]);
     AssertNil([doc numberForKey: @"key"]);
     AssertNil([doc objectForKey: @"key"]);
     AssertNil([doc stringForKey: @"key"]);
-    
     AssertNil([doc dictionaryForKey: @"key"]);
     AssertNil([doc arrayForKey: @"key"]);
-    
     AssertEqualObjects([doc toDictionary], @{});
 }
 
@@ -240,6 +237,8 @@
     Assert(doc1b != doc1a);
     AssertEqualObjects(doc1b.documentID, doc1a.documentID);
     AssertEqualObjects([doc1b toDictionary], [doc1a toDictionary]);
+    
+    [anotherDb close nil];
 }
 
 
@@ -273,6 +272,8 @@
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1a toDictionary]);
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1c toDictionary]);
     XCTAssertNotEqualObjects([doc1b toDictionary], [doc1d toDictionary]);
+    
+    [anotherDb close nil];
 }
 
 
@@ -310,8 +311,7 @@
         AssertNil([d stringForKey: @"one"]);
         AssertNil([d stringForKey: @"minus_one"]);
         AssertNil([d stringForKey: @"one_dot_one"]);
-        AssertEqualObjects([d stringForKey: @"date"],
-                           [CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]]);
+        AssertEqualObjects([d stringForKey: @"date"], kDocumentTestDate);
         AssertNil([d stringForKey: @"dict"]);
         AssertNil([d stringForKey: @"array"]);
         AssertNil([d stringForKey: @"blob"]);
@@ -598,8 +598,7 @@
         AssertNil([d dateForKey: @"minus_one"]);
         AssertNil([d dateForKey: @"one_dot_one"]);
         AssertNotNil([d dateForKey: @"date"]);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]],
-                           [d stringForKey: @"date"]);
+        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], kDocumentTestDate);
         AssertNil([d dateForKey: @"dict"]);
         AssertNil([d dateForKey: @"array"]);
         AssertNil([d dateForKey: @"blob"]);
@@ -609,8 +608,8 @@
 
 
 - (void) testSetBlob {
-    CBLDocument* doc = [self createDocument: @"doc1"];
-    NSData* content = [@"12345" dataUsingEncoding: NSUTF8StringEncoding];
+    CBLDocument* doc = [self createDocument: @"doc1"
+    NSData* content = [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
     [doc setObject: blob forKey: @"blob"];
     
@@ -650,7 +649,7 @@
         AssertNil([d dateForKey: @"dict"]);
         AssertNil([d dateForKey: @"array"]);
         AssertEqualObjects([d blobForKey: @"blob"].content,
-                           [@"12345" dataUsingEncoding: NSUTF8StringEncoding]);
+                           [kDocumentTestBlob dataUsingEncoding: NSUTF8StringEncoding]);
         AssertNil([d dateForKey: @"non_existing_key"]);
     }];
 }
@@ -1317,7 +1316,7 @@
 
 
 - (void)testBlob {
-    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
@@ -1392,7 +1391,7 @@
 
 
 - (void)testMultipleBlobRead {
-    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSError *error;
     
     CBLBlob* data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
@@ -1429,7 +1428,7 @@
 
 
 - (void)testReadExistingBlob {
-    NSData* content = [@"12345" dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* content = [kDocumentTestBlob dataUsingEncoding:NSUTF8StringEncoding];
     NSError* error;
     CBLBlob *data = [[CBLBlob alloc] initWithContentType:@"text/plain" data:content];
     Assert(data, @"Failed to create blob: %@", error);
